@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
+import javax.xml.transform.Result;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -46,9 +49,38 @@ public class MemberApiController {
         return new UpdateMemberResponse(findMember.getId(), findMember.getName());
     }
 
+    // entity가 바뀌면 또 문제가 생길 수 있음
+    // entity 직접 반환하면 안됨
+    @GetMapping("/api/v1/members")
+    public List<Member> memberV1() {
+        return memberService.findMembers();
+    }
+
+    // entity를 노출하지 말자!
+    @GetMapping("/api/v2/members")
+    public Result memberV2(){
+        List<Member> findMembers = memberService.findMembers();
+        List<MemberDto> collect = findMembers.stream()
+                .map(m -> new MemberDto(m.getName()))
+                .collect(Collectors.toList());
+        return new Result(collect);
+    }
+
     @Data
     @AllArgsConstructor
-    static class UpdateMemberResponse{
+    static class Result<T>{
+        private T data;
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class MemberDto{
+        private String name;
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class UpdateMemberResponse {
         private Long id;
         private String name;
     }
